@@ -25,15 +25,18 @@ public class FoF {
 
       //Create int array to hold three values, initiate first value
       int[] triadVals = new int[3];
-      triadVals[0] = Integer.parseInt(input[0]);
+      int curr = Integer.parseInt(input[0]);
       //Go through the friends list and create all triads, then output in sorted order
-      for (int i = 1; i < input.length;i++){
+      for (int i = 1; i < input.length; i++){
+        triadVals[0] = curr;
         triadVals[1] = Integer.parseInt(input[i]);
         for (int j = i+1; j < input.length; j++){
           triadVals[2] = Integer.parseInt(input[j]);
-          Arrays.sort(triadVals);
-          triad.set(Integer.toString(triadVals[0]) + " " + Integer.toString(triadVals[1]) + " " + Integer.toString(triadVals[2]));
-          c.write(triad, dummy);
+          if (!(triadVals[0] == triadVals[1] || triadVals[0] == triadVals[1] || triadVals[1] == triadVals[2])) {
+            Arrays.sort(triadVals);
+            triad.set(Integer.toString(triadVals[0]) + " " + Integer.toString(triadVals[1]) + " " + Integer.toString(triadVals[2]));
+            c.write(triad, dummy);
+          }
         }
       }
     }
@@ -43,9 +46,11 @@ public class FoF {
     public void reduce(Text triad, Iterable<IntWritable> value, Context c) throws IOException, InterruptedException {
       int repeated = 0;
 
-      repeated += 1;
+      for (IntWritable v : value) {
+          repeated += v.get();
+      }
 
-      if (repeated == 3) {
+      if (repeated > 1) {
         String[] tripleStrings = StringUtils.split(triad.toString(), " ");
 
         c.write(triad, null);
@@ -56,5 +61,31 @@ public class FoF {
       }
     }
   }
-    public static void main(String[] args) throws Exception {}
+
+  public static void main(String[] args) throws Exception {
+    if (args.length != 2) {
+      System.out.println("Usage: FOF <inputFile> <outputFile>");
+      return;
+    }
+
+    //Create configuration and configure hadoop job
+    Configuration conf = new Configuration();
+    Job job = new Job(conf, "FoF");
+    job.setJarByClass(FoF.class);
+
+    //Point the job to our map/reduce classes
+    job.setMapperClass(FoFMapper.class);
+    job.setReducerClass(FoFReducer.class);
+
+    //Set value types for key and value
+    job.setOutputKeyClass(Text.class);
+    job.setOutputValueClass(IntWritable.class);
+
+    //Set input and output information
+    FileInputFormat.addInputPath(job, new Path(args[0]));
+    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+    System.exit(job.waitForCompletion(true) ? 0 : 1);
+  }
+
 }
