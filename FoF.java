@@ -13,8 +13,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-public class FOF {
-  public static class FOFMapper extends Mapper<Object, Text, Text, IntWritable> {
+public class FoF {
+  public static class FoFMapper extends Mapper<Object, Text, Text, IntWritable> {
     //Value to be used as a dummy value
     private static IntWritable dummy = new IntWriteable(1);
     //Iterable used to hold triad String
@@ -37,7 +37,7 @@ public class FOF {
     }
   }
 
-  public static class FOFReducer extends MapReduceBase implements Reducer<Text, IntWritable, Text, IntWritable> {
+  public static class FoFReducer extends MapReduceBase implements Reducer<Text, IntWritable, Text, IntWritable> {
     public void reduce(Text key, Iterable<IntWritable> value, OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
 
     }
