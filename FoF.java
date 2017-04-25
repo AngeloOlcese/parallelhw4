@@ -16,30 +16,45 @@ import org.apache.hadoop.util.GenericOptionsParser;
 public class FoF {
   public static class FoFMapper extends Mapper<Object, Text, Text, IntWritable> {
     //Value to be used as a dummy value
-    private static IntWritable dummy = new IntWriteable(1);
+    private static IntWritable dummy = new IntWritable(1);
     //Iterable used to hold triad String
     private Text triad = new Text();
 
-    public void map(Object key, Text value, Context c) throws IOException {
+    public void map(Object key, Text value, Context c) throws IOException, InterruptedException {
       String[] input = value.toString().split(" ");
 
-      String[] triadStrings = new String[3];
-      triadStrings[0] = input[0];
+      //Create int array to hold three values, initiate first value
+      int[] triadVals = new int[3];
+      triadVals[0] = Integer.parseInt(input[0]);
+      //Go through the friends list and create all triads, then output in sorted order
       for (int i = 1; i < input.length;i++){
-        triadStrings[1] = input[i];
+        triadVals[1] = Integer.parseInt(input[i]);
         for (int j = i+1; j < input.length; j++){
-          triadStrings[2] = input[j];
-          Arrays.sort(triadStrings);
-          triad.set(triadStrings[0] + " " + triadStrings[1] + " " + triadStrings[2]);
+          triadVals[2] = Integer.parseInt(input[j]);
+          Arrays.sort(triadVals);
+          triad.set(Integer.toString(triadVals[0]) + " " + Integer.toString(triadVals[1]) + " " + Integer.toString(triadVals[2]));
           c.write(triad, dummy);
         }
       }
     }
   }
 
-  public static class FoFReducer extends MapReduceBase implements Reducer<Text, IntWritable, Text, IntWritable> {
-    public void reduce(Text key, Iterable<IntWritable> value, OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
+  public static class FoFReducer extends  Reducer<Text, IntWritable, Text, IntWritable> {
+    public void reduce(Text triad, Iterable<IntWritable> value, Context c) throws IOException, InterruptedException {
+      int repeated = 0;
 
+      repeated += 1;
+
+      if (repeated == 3) {
+        String[] tripleStrings = StringUtils.split(triad.toString(), " ");
+
+        c.write(triad, null);
+        triad.set(tripleStrings[1] + " " + tripleStrings[0] + " " + tripleStrings[2]);
+        c.write(triad, null);
+        triad.set(tripleStrings[2] + " " + tripleStrings[0] + " " + tripleStrings[1]);
+        c.write(triad, null);
+      }
     }
   }
+    public static void main(String[] args) throws Exception {}
 }
